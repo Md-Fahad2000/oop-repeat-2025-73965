@@ -1,0 +1,136 @@
+﻿@model List<workshopManagementSystem.Razor.Models.ServiceDTO>
+
+@{
+    ViewData["Title"] = "My Assigned Services";
+}
+
+<h1 style="text-align: center; color: #2c3e50; margin: 30px 0; font-family: Arial, sans-serif;">🔧 My Assigned Services</h1>
+
+@if (!Model.Any())
+{
+    <div style="background-color: #f8f9fa; border: 2px solid #dee2e6; padding: 40px; margin: 20px; text-align: center; border-radius: 8px;">
+        <div style="font-size: 48px; color: #6c757d; margin-bottom: 20px;">📋</div>
+        <h2 style="color: #495057; margin-bottom: 15px;">No Services Assigned</h2>
+        <p style="color: #6c757d; font-size: 16px;">You currently don't have any services assigned to you.</p>
+    </div>
+}
+else
+{
+    <div style="max-width: 1000px; margin: 0 auto; padding: 0 20px;">
+        @foreach (var service in Model)
+        {
+            <div style="border: 2px solid #ddd; margin: 20px 0; background-color: white; border-radius: 8px; overflow: hidden;">
+                <!-- Service Header -->
+                <div style="background-color: @(service.ServiceCurrentStatus == "Completed" ? "#28a745" : "#ffc107"); color: @(service.ServiceCurrentStatus == "Completed" ? "white" : "#212529"); padding: 20px; cursor: pointer;" 
+                     onclick="toggleService(@service.ServiceRecordId)">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px;">🚗 @service.VehicleLicenseNumber</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 14px;">📅 @service.ServiceStartDate.ToShortDateString()</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="background-color: @(service.ServiceCurrentStatus == "Completed" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)"); padding: 5px 10px; border-radius: 15px; font-weight: bold;">
+                                @service.ServiceCurrentStatus
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Content -->
+                <div id="service-@service.ServiceRecordId" style="display: none; padding: 20px;">
+                    @if (service.ServiceCurrentStatus == "Completed")
+                    {
+                        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+                            <h4 style="color: #495057; margin-bottom: 15px;">📝 Work Description</h4>
+                            <p style="background-color: white; padding: 15px; border-radius: 5px; margin-bottom: 20px;">@service.ServiceWorkDescription</p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                <div style="background-color: white; padding: 15px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 24px; margin-bottom: 10px;">⏰</div>
+                                    <strong>Hours Worked</strong>
+                                    <p style="margin: 10px 0 0 0; font-size: 18px; color: #28a745;">@service.ServiceWorkHours</p>
+                                </div>
+                                
+                                <div style="background-color: white; padding: 15px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 24px; margin-bottom: 10px;">✅</div>
+                                    <strong>Completed On</strong>
+                                    <p style="margin: 10px 0 0 0; font-size: 18px; color: #28a745;">@service.ServiceCompletionDate?.ToShortDateString()</p>
+                                </div>
+                                
+                                <div style="background-color: white; padding: 15px; border-radius: 5px; text-align: center;">
+                                    <div style="font-size: 24px; margin-bottom: 10px;">💰</div>
+                                    <strong>Total Cost</strong>
+                                    <p style="margin: 10px 0 0 0; font-size: 18px; color: #28a745;">€@service.ServiceTotalCost</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 5px;">
+                            <h4 style="color: #856404; margin-bottom: 20px;">🛠️ Complete Service</h4>
+                            
+                            <form asp-controller="Mechanic" asp-action="FinalizeServiceCompletion" method="post">
+                                <input type="hidden" name="id" value="@service.ServiceRecordId" />
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #495057;">
+                                        📝 Work Performed:
+                                    </label>
+                                    <textarea name="repairDescription" rows="4" required placeholder="Describe the work you performed..."
+                                              style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-family: Arial, sans-serif; resize: vertical;"></textarea>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                    <div>
+                                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #495057;">
+                                            ⏰ Hours Worked:
+                                        </label>
+                                        <input type="number" name="hours" min="0.5" step="0.5" required placeholder="Enter hours (e.g., 1.5)"
+                                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                                               oninput="calculateCost(this, @service.ServiceRecordId)">
+                                    </div>
+                                    
+                                    <div>
+                                        <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #495057;">
+                                            💰 Estimated Cost:
+                                        </label>
+                                        <div style="display: flex; align-items: center;">
+                                            <span style="background-color: #e9ecef; padding: 12px; border: 1px solid #ddd; border-right: none; border-radius: 5px 0 0 5px;">€</span>
+                                            <input type="text" id="estimatedCost-@service.ServiceRecordId" readonly value="Will calculate automatically"
+                                                   style="flex: 1; padding: 12px; border: 1px solid #ddd; border-left: none; border-radius: 0 5px 5px 0; background-color: #f8f9fa;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="text-align: right;">
+                                    <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                                        ✅ Mark as Complete
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    function toggleService(serviceId) {
+        const content = document.getElementById('service-' + serviceId);
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+        } else {
+            content.style.display = 'none';
+        }
+    }
+
+    function calculateCost(input, serviceId) {
+        const hours = parseFloat(input.value) || 0;
+        const hourlyRate = 75;
+        const estimatedCost = hours * hourlyRate;
+        document.getElementById('estimatedCost-' + serviceId).value = estimatedCost.toFixed(2);
+    }
+</script>
