@@ -1,0 +1,48 @@
+﻿@model workshopManagementSystem.Razor.Models.CustomerDTO
+@{
+    ViewData["Title"] = "Login";
+}
+
+@{
+    if (TempData["Success"] != null)
+    {
+        <div>
+            <strong>@TempData["Success"]</strong>
+        </div>
+    }
+}
+
+<h1>Login</h1>
+
+@{
+    if (ViewBag.Message != null)
+    {
+        <p style="color:red">@ViewBag.Message</p>
+    }
+}
+
+<form asp-action="AuthenticateUserCredentials">
+    <div asp-validation-summary="ModelOnly"></div>
+    
+    <div>
+        <label asp-for="CustomerEmailAddress">Email:</label>
+        <input asp-for="CustomerEmailAddress" style="width: 100%; padding: 10px; margin: 5px 0;" />
+        <span asp-validation-for="CustomerEmailAddress"></span>
+    </div>
+    
+    <div>
+        <label asp-for="CustomerAccessPassword">Password:</label>
+        <input asp-for="CustomerAccessPassword" type="password" style="width: 100%; padding: 10px; margin: 5px 0;" />
+        <span asp-validation-for="CustomerAccessPassword"></span>
+    </div>
+    
+    <div>
+        <input type="submit" value="Login" style="width: 100%; padding: 10px; margin: 10px 0; background-color: #007bff; color: white; border: none; cursor: pointer;" />
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
