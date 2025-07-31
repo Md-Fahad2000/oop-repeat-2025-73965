@@ -1,0 +1,119 @@
+﻿@model List<workshopManagementSystem.Razor.Models.CustomerDTO>
+@{
+    ViewData["Title"] = "Customer Management";
+}
+
+<h1>Customer Management</h1>
+<p>Manage your customer database efficiently</p>
+
+@if (TempData["Success"] != null)
+{
+    <div>
+        <strong>@TempData["Success"]</strong>
+    </div>
+}
+
+<div>
+    <button onclick="showAddCustomerModal()">Add New Customer</button>
+</div>
+
+<div>
+    <h2>Customer Statistics</h2>
+    <div>
+        <div>
+            <strong>@(Model?.Count ?? 0)</strong>
+            <span>Total Customers</span>
+        </div>
+        <div>
+            <strong>@(Model?.Count(c => !string.IsNullOrEmpty(c.CustomerEmailAddress)) ?? 0)</strong>
+            <span>Active Accounts</span>
+        </div>
+        <div>
+            <strong>@DateTime.Now.ToString("MMM")</strong>
+            <span>Current Month</span>
+        </div>
+    </div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">ID</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Customer</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Contact</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in Model)
+            {
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">#@customer.CustomerAccountId</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <div>
+                            <strong>@customer.CustomerFullName</strong>
+                            <div>@customer.CustomerEmailAddress</div>
+                        </div>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">@customer.CustomerEmailAddress</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">Active</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <div>
+                            <a href="@Url.Action("ShowCustomerVehicleDetails", "Admin", new { id = customer.CustomerAccountId })">View</a>
+                            <form asp-controller="Admin" asp-action="RemoveCustomer" asp-route-id="@customer.CustomerAccountId" method="post" style="display:inline;">
+                                <button type="submit" onclick="return confirm('Are you sure you want to delete customer @customer.CustomerFullName?')">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div>
+        <h3>No Customers Found</h3>
+        <p>Start by adding your first customer to the system.</p>
+        <button onclick="showAddCustomerModal()">Add First Customer</button>
+    </div>
+}
+
+<!-- Add Customer Modal -->
+<div id="addCustomerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div style="background-color: white; margin: 10% auto; padding: 20px; width: 50%;">
+        <h3>Add New Customer</h3>
+        <form asp-controller="Admin" asp-action="CreateNewCustomer" method="post">
+            <div>
+                <label>Full Name:</label>
+                <input name="CustomerFullName" required style="width: 100%; padding: 5px; margin: 5px 0;" />
+            </div>
+            <div>
+                <label>Email Address:</label>
+                <input name="CustomerEmailAddress" type="email" required style="width: 100%; padding: 5px; margin: 5px 0;" />
+            </div>
+            <div>
+                <label>Password:</label>
+                <input name="CustomerAccessPassword" type="password" required style="width: 100%; padding: 5px; margin: 5px 0;" />
+                <small>Password must be at least 6 characters long</small>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="submit">Save Customer</button>
+                <button type="button" onclick="hideAddCustomerModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showAddCustomerModal() {
+        document.getElementById('addCustomerModal').style.display = 'block';
+    }
+
+    function hideAddCustomerModal() {
+        document.getElementById('addCustomerModal').style.display = 'none';
+    }
+</script>
